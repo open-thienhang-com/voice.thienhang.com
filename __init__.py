@@ -18,3 +18,9 @@ text = "Hello! This is a machine learning-powered voice synthesizer."
 tts.tts_to_file(text=text, file_path="examples/output2.wav")
 
 print("Speech synthesis complete! Check 'output.wav'.")
+
+tts.tts_with_vc_to_file(
+    "Wie sage ich auf Italienisch, dass ich dich liebe?",
+    speaker_wav="target/speaker.wav",
+    file_path="output.wav"
+)
