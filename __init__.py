@@ -9,11 +9,12 @@ print(f"Device: {device}")
 # List available 🐸TTS models
 print(TTS().list_models())
 
-tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
+tts = TTS("tts_models/en/ljspeech/tacotron2-DDC").to(device)
 
-# Run TTS
-# ❗ Since this model is multi-lingual voice cloning model, we must set the target speaker_wav and language
-# Text to speech list of amplitude values as output
-wav = tts.tts(text="Hello world!", speaker_wav="my/cloning/audio.wav", language="en")
-# Text to speech to a file
-tts.tts_to_file(text="Hello world!", speaker_wav="my/cloning/audio.wav", language="en", file_path="output.wav")
+# Input text for synthesis
+text = "Hello! This is a machine learning-powered voice synthesizer."
+
+# Generate speech and save to a file
+tts.tts_to_file(text=text, file_path="examples/output2.wav")
+
+print("Speech synthesis complete! Check 'output.wav'.")
