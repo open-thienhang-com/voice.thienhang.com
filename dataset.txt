@@ -1,3 +1,0 @@
-Hello world|/examples/hello_world.wav
-How are you?|/examples/how_are_you.wav
-This is a test sentence.|/examples/test_sentence.wav

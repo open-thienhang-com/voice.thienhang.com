@@ -15,7 +15,10 @@ tts = TTS("tts_models/en/ljspeech/tacotron2-DDC").to(device)
 text = "Hello! This is a machine learning-powered voice synthesizer."
 
 # Generate speech and save to a file
-tts.tts_to_file(text=text, file_path="examples/output2.wav")
+tts.tts_to_file(
+    text=text, 
+    file_path="examples/output2.wav"
+)
 
 print("Speech synthesis complete! Check 'output.wav'.")
 

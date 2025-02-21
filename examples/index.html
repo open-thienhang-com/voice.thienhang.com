@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-To-Speech Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="card shadow p-4">
+            <h2 class="text-center">Text-To-Speech Demo <span class="fs-6 text-muted">(Engine: <a href="https://github.com/coqui-ai/TTS.git" target="_blank">GitHub</a>)</span></h2>
+            
+            <div class="mb-3">
+                <label for="model" class="form-label"><strong>Model:</strong></label>
+                <select id="model" class="form-select"></select>
+            </div>
+
+            <div class="mb-3">
+                <label for="model-to-download" class="form-label"><strong>All Models:</strong></label>
+                <div class="input-group">
+                    <select id="model-to-download" class="form-select"></select>
+                    <a class="btn btn-primary d-none" id="download-model" href="#" target="_blank"><i class="fa fa-download"></i> Download</a>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="language" class="form-label"><strong>Language:</strong></label>
+                <select id="language" class="form-select"></select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="speaker" class="form-label"><strong>Speaker:</strong></label>
+                <div class="input-group">
+                    <select id="speaker" class="form-select">
+                        <optgroup label="Model Speakers" id="model-speakers"></optgroup>
+                        <optgroup label="External Speakers" id="external-speakers"></optgroup>
+                    </select>
+                    <button class="btn btn-secondary" id="select-speaker"><i class="fa fa-folder-open"></i> Choose File</button>
+                    <input type="file" id="speaker-file-selector" class="d-none">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="text" class="form-label"><strong>Text:</strong></label>
+                <textarea id="text" class="form-control" rows="4" placeholder="Enter text, Shift-Enter to synthesize"></textarea>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-success" id="generate"><i class="fa fa-play"></i> Synthesize Audio</button>
+                <button class="btn btn-danger" id="clear"><i class="fa fa-trash"></i> Clear</button>
+            </div>
+
+            <div id="loader" class="text-center mt-3 d-none">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+            
+            <div id="error" class="alert alert-danger mt-3 d-none"></div>
+            
+            <h3 id="results-title" class="mt-4 d-none">Results:</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
