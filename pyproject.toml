@@ -7,9 +7,10 @@ readme = "README.md"
 packages = [{ include = "tian_voice" }]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.10,<3.12"
 fastapi = "^0.115.8"
 uvicorn = "^0.34.0"
+tts = "^0.22.0"
 
 
 [build-system]
