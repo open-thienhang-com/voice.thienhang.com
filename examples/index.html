@@ -13,7 +13,13 @@
         <div class="card shadow p-4">
             <h2 class="text-center">Text-To-Speech Demo <span class="fs-6 text-muted"></span></h2>
             
-            <div class="mb-3">
+            <div class="container mt-4">
+                <div class="row">
+                    <div class="col-md-4 bg-primary text-white p-3">
+                        <div id="results"></div>
+                    </div>
+                    <div class="col-md-8 bg-secondary text-white p-3">
+                        <div class="mb-3">
                 <label for="model" class="form-label"><strong>Model:</strong></label>
                 <select id="model" class="form-select"></select>
             </div>
@@ -60,7 +66,12 @@
             <div id="error" class="alert alert-danger mt-3 d-none"></div>
             
             <h3 id="results-title" class="mt-4 d-none">Results:</h3>
-            <div id="results"></div>
+            
+                </div>
+            </div>
+
+
+            
         </div>
     </div>
 

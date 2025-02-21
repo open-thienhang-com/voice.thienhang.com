@@ -70,7 +70,6 @@ def tts_model_path(model_name):
     model_full_name = f'{model_type}--{lang}--{dataset}--{model}'
     return os.path.join(data_dir, model_full_name)
 
-
 def tts_list_model_languages():
     global model_languages
     if model_languages:

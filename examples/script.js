@@ -104,21 +104,21 @@ async function generate() {
     console.log(text);
 
     const headers = { 'Accept': 'audio/*' };
-    const formData = new FormData();
-    // formData.append('model_name', 'tts_models/multilingual/multi-dataset/your_tts');
-    formData.append('text', text);
-    formData.append('language', language);
-    if(speaker.startsWith('--')) {
-    formData.append('speaker_wav', speakerFiles[speaker]);
+    const params = new URLSearchParams();
+    params.append('text', text);
+    params.append('language', language);
+
+    if (speaker.startsWith('--')) {
+        params.append('speaker_wav', speakerFiles[speaker]);
     } else {
-    formData.append('speaker', speaker);
+        params.append('speaker', speaker);
     }
+
     // formData.append('download', 'on');
-    const body = formData;
     try {
     showLoading();
 
-    const response = await fetch(`/models/${modelName}/generate`, { method: 'POST', body, headers });
+    const response = await fetch(`/models/${modelName}/generate?${params.toString()}`, { method: 'GET', headers });
     if(!response.ok) {
         console.log(response);
         // const data = await response.json();
