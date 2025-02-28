@@ -237,7 +237,7 @@ def load_routes(app):
 
         return generate(model_name, text, language, speaker, None, download)
 
-    static_dir = os.path.join(os.path.dirname(__file__), "examples")
+    static_dir = os.path.join(os.path.dirname(__file__), "public")
     # Kiểm tra nếu thư mục tồn tại
     if not os.path.exists(static_dir):
         os.makedirs(static_dir)  # Tạo thư mục nếu chưa có
