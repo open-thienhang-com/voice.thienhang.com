@@ -74,6 +74,8 @@ _Below is an example of how you can instruct your audience on installing and set
     python -m venv .venv
 
     source .venv/bin/activate
+
+    .\.venv\Scripts\activate.ps1 
    ```
 
    ```shell
