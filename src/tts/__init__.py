@@ -150,17 +150,36 @@ class VoiceSynthesizer:
         import sys, os
         import subprocess
         import asyncio
-        print("XXXXXXXXXXXXXXXXXXXXXX {}".format(model_name))
+        print(f"XXXXXXXXXXXXXXXXXXXXXX {model_name}")
         print(f'Downloading model {model_name}')
-        with subprocess.Popen([sys.executable, os.path.join(os.path.dirname(__file__), 'download.py'), '--name', model_name],
-                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=dict(os.environ, PYTHONUNBUFFERED='1'), bufsize=0) as proc:
-            while proc.poll() == None:
-                print(proc.stdout.readlines())
-                # yield proc.stdout.read(10)
+
+        # Path to the download.py script
+        script_path = os.path.join(os.path.dirname(__file__), 'download.py')
+
+        # Start subprocess
+        with subprocess.Popen([sys.executable, script_path, '--name', model_name],
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              env=dict(os.environ, PYTHONUNBUFFERED='1'), bufsize=1, universal_newlines=True) as proc:
+            # Read stdout and stderr line by line
+            while True:
+                # Read a line of stdout
+                stdout_line = proc.stdout.readline()
+                if stdout_line:
+                    print(stdout_line.strip())  # Print the line from stdout
+                else:
+                    break  # Exit when there are no more lines
+
+            # Handle stderr (error output)
+            stderr_line = proc.stderr.read()
+            if stderr_line:
+                print(f"Error occurred: {stderr_line.strip()}")
+
         print(f'Downloading model {model_name} finished. {os.path.dirname(__file__)}')
-        # reset_models()
+
+        # Optionally call refresh() here if needed
         # if refresh:
         #     refresh()
+
         return
     
     def _generate(self):

@@ -132,7 +132,9 @@ class Server:
             print("download_model")
             model_name = model_name.value
             model_name = '/'.join(tts.get_model_components(model_name))
-            return StreamingResponse(tts.download_model(model_name), media_type='text/plain')
+            tts.download_model(model_name, refresh=None )
+            return
+            # return StreamingResponse(tts.download_model(model_name, refresh=None ), media_type='text/plain')
 
         @app.get("/models/{model_name}/languages")
         def model_languages(model_name: ModelName):

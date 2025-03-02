@@ -1,132 +1,107 @@
 #!/usr/bin/env python3
 
 import re
-
+import argparse
+import sys
+import os
 from TTS.api import TTS
 
-tts = None
 
-def list_all_models():
-    global tts
-    if not tts:
-        tts = TTS()
-    return tts.manager.list_models()
 
-def download_model(model_name):
-    print("ppppppppppppppppppppppppppppppppppppppp1111111111111")
-    global tts
-    if not tts:
-        tts = TTS()
-    tts.download_model_by_name(model_name)
+class TTSModelDownloader:
+    def __init__(self):
+        self.tts = TTS()
+        os.environ.setdefault('TTS_HOME', os.path.join(os.getcwd(), "src", "tts", "models"))
+        print(os.path.join(os.getcwd(), "src", "tts", "models"))
+        print(f"Model storage path: {os.environ['TTS_HOME']}")
 
-    print("ppppppppppppppppppppppppppppppppppppppp")
+    def list_all_models(self):
+        return self.tts.manager.list_models()
 
-def download_selected_models(languages=[], datasets=[], models=[], patterns=[], regexps=[], types=[], dryrun=False):
-    print("======================== bbbbbbbbbb", models )
-    for model_name in list_all_models():
-        model_type, lang, dataset, model = model_name.split('/')
-        # print(" >>> {} {} {} {}".format(model_type, lang, dataset, model))
-        if languages and lang not in languages:
-            continue
-        if datasets and dataset not in datasets:
-            continue
-        if models and model not in models:
-            continue
-        if types and model_type not in types:
-            continue
-        if patterns:
-            for pattern in patterns:
-                if pattern in model_name:
-                    break
-            else:
+    def download_model(self, model_name):
+        print(f"Downloading model: {model_name}")
+        self.tts.download_model_by_name(model_name)
+
+    def download_selected_models(self, languages=None, datasets=None, models=None, patterns=None, regexps=None, types=None, dryrun=False):
+        languages, datasets, models, patterns, regexps, types = languages or [], datasets or [], models or [], patterns or [], regexps or [], types or []
+        
+        for model_name in self.list_all_models():
+            model_type, lang, dataset, model = model_name.split('/')
+            
+            if (languages and lang not in languages) or \
+               (datasets and dataset not in datasets) or \
+               (models and model not in models) or \
+               (types and model_type not in types):
                 continue
-        if regexps:
-            for regexp in regexps:
-                if re.match(regexp, model_name):
-                    break
-            else:
+            
+            if patterns and not any(pattern in model_name for pattern in patterns):
                 continue
-        print("========================" )
-        if not dryrun:
-            print(f'downloading model {model_name}')
-            download_model(model_name)
-        else:
-            print(f'model selected for download: {model_name}')
+            
+            if regexps and not any(re.match(regexp, model_name) for regexp in regexps):
+                continue
+            
+            print(f"Model selected: {model_name}")
+            if not dryrun:
+                self.download_model(model_name)
 
-def download_free_vc_wavlm(freevc=False, wavlm=False, dryrun=False):
-    # download FreeVC WavLM model
-    if freevc:
-        model_name = 'voice_conversion_models/multilingual/vctk/freevc24'
-        if not dryrun:
-            print(f'downloading model {model_name}')
-            download_model(model_name)
-        else:
-            print(f'model selected for download: {model_name}')
-    if wavlm:
-        model_name = 'FreeVC WavLM'
-        if not dryrun:
-            print(f'downloading model {model_name}')
-            from TTS.vc.modules.freevc.wavlm import get_wavlm
-            get_wavlm()
-        else:
-            print(f'model selected for download: {model_name}')
+    def download_free_vc_wavlm(self, freevc=False, wavlm=False, dryrun=False):
+        if freevc:
+            model_name = 'voice_conversion_models/multilingual/vctk/freevc24'
+            if not dryrun:
+                self.download_model(model_name)
+            else:
+                print(f"Model selected for download: {model_name}")
+        
+        if wavlm:
+            model_name = 'FreeVC WavLM'
+            if not dryrun:
+                from TTS.vc.modules.freevc.wavlm import get_wavlm
+                get_wavlm()
+            print(f"Model selected for download: {model_name}")
 
 
-if __name__ == '__main__':
-    import argparse, sys, os
-
-
-    parser = argparse.ArgumentParser(description='TTS Model Downloader', formatter_class=argparse.ArgumentDefaultsHelpFormatter, epilog='')
+def main():
+    parser = argparse.ArgumentParser(description='TTS Model Downloader', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     group = parser.add_argument_group('Model selection conditions',
-                                      description='Conditions of the same type are joined with OR operator, however, '
-                                      + 'conditions with different types are joined with AND operator.')
+                                      description='Conditions of the same type are joined with OR, but different types are joined with AND.')
+    group.add_argument('--lang', '-l', action='append', help='Select by language')
+    group.add_argument('--dataset', '-d', action='append', help='Select by dataset')
+    group.add_argument('--model', '-m', action='append', help='Select by model')
+    group.add_argument('--type', '-t', action='append', help='Select by type')
+    group.add_argument('--name', '-n', action='append', help='Select by pattern in full name')
+    group.add_argument('--re', '-r', action='append', help='Select by matching regex against full name')
 
-    group.add_argument('--lang', '-l', metavar='LANG', action='append', type=str, help='select by language')
-    group.add_argument('--dataset', '-d', metavar='DATASET', action='append', type=str, help='select by dataset')
-    group.add_argument('--model', '-m', metavar='MODEL', action='append', type=str, help='select by model')
-    group.add_argument('--type', '-t', metavar='TYPE', action='append', type=str, help='select by type')
-    group.add_argument('--name', '-n', metavar='PATTERN', action='append', type=str,
-                       help='select by pattern in full name, i.e., type/lang/dataset/model')
-    group.add_argument('--re', '-r', metavar='REGEX', action='append', type=str,
-                       help='select by matching regex against full name, i.e., type/lang/dataset/model')
-
-    parser.add_argument('--free-vc', '--vc', action='store_true', help='download FreeVC models including WavLM model')
-    parser.add_argument('--free-vc-wavlm', '--wavlm', action='store_true', help='download FreeVC WavLM model')
-    parser.add_argument('--all', action='store_true', help='download all models')
-    parser.add_argument('--list-all', action='store_true', help='list all downloadable models')
-    parser.add_argument('--dry-run', '--dry', action='store_true', help='do not download, list selected models only')
+    parser.add_argument('--free-vc', '--vc', action='store_true', help='Download FreeVC models including WavLM')
+    parser.add_argument('--free-vc-wavlm', '--wavlm', action='store_true', help='Download FreeVC WavLM model')
+    parser.add_argument('--all', action='store_true', help='Download all models')
+    parser.add_argument('--list-all', action='store_true', help='List all available models')
+    parser.add_argument('--dry-run', '--dry', action='store_true', help='List selected models without downloading')
 
     args = parser.parse_args()
 
-    if not args.list_all and not args.all and not args.lang and not args.dataset and not args.model and not args.name and not args.re and not args.type \
-        and not args.free_vc and not args.free_vc_wavlm:
-        print('No model selected, either specify model selection parameters or --all to download all available models', file=sys.stderr)
+    if not any([args.list_all, args.all, args.lang, args.dataset, args.model, args.name, args.re, args.type, args.free_vc, args.free_vc_wavlm]):
+        print('No model selected. Specify selection parameters or use --all to download all models.', file=sys.stderr)
         sys.exit(1)
 
-    # from TTS.utils.manage import set_data_path
+    
 
-    custom_path = os.path.join(os.getcwd(), "tts/models") 
-    os.environ.setdefault('TTS_HOME',custom_path)
-    # set_data_path(custom_path)  
-    data_dir = custom_path  
-
-    # Kiểm tra lại đường dẫn mới
-    print("Model will be saved in:", data_dir)
+    downloader = TTSModelDownloader()
 
     if args.list_all:
-        print('TYPE/LANG/DATASET/MODEL')
-        for model_name in list_all_models():
-            print(model_name)
-        print("Exxit {}".format(model_name))
+        print('Available models:')
+        for model in downloader.list_all_models():
+            print(model)
         sys.exit(0)
-   
+    
     if args.all:
         args.free_vc = True
         args.free_vc_wavlm = True
 
     if args.free_vc or args.free_vc_wavlm:
-        download_free_vc_wavlm(args.free_vc, args.free_vc or args.free_vc_wavlm, dryrun=args.dry_run)
-    
-    print(args)
-    download_selected_models(args.lang, args.dataset, args.model, args.name, args.re, args.type, dryrun=args.dry_run)
+        downloader.download_free_vc_wavlm(args.free_vc, args.free_vc or args.free_vc_wavlm, dryrun=args.dry_run)
+
+    downloader.download_selected_models(args.lang, args.dataset, args.model, args.name, args.re, args.type, dryrun=args.dry_run)
+
+if __name__ == '__main__':
+    main()
