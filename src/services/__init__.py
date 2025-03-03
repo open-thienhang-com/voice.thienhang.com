@@ -19,7 +19,6 @@ class Server:
         
         #
         output_path = os.path.dirname(os.path.abspath(__file__))
-        dataset_path = os.path.join(output_path, "../VCTK/")
         
         static_dir = os.path.join(os.path.dirname(__file__), "static")
 
@@ -129,10 +128,9 @@ class Server:
 
         @app.get("/models/{model_name}/download")
         def download_model(model_name: AllModelName):
-            print("download_model")
             model_name = model_name.value
             model_name = '/'.join(tts.get_model_components(model_name))
-            tts.download_model(model_name, refresh=None )
+            tts.download_model(model_name, refresh=None)
             return
             # return StreamingResponse(tts.download_model(model_name, refresh=None ), media_type='text/plain')
 

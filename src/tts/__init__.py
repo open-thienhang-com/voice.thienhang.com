@@ -4,18 +4,18 @@ import os, json
 from .wrapper import TTSWrapper , InvalidInputException
 from TTS.utils.manage import get_user_data_dir
 from TTS.api import TTS
-
 from collections import namedtuple, defaultdict
-
-os.environ.setdefault('TTS_HOME', os.getcwd())
-# os.environ.setdefault('XDG_DATA_HOME', os.getcwd())
-data_dir = get_user_data_dir('models')
 
 model_speakers = {}
 
 
 class VoiceSynthesizer:
     def __init__(self, model_name: str ="tts_models", default_model_type: str = "tts_models", data_dir: str = ""):
+        os.environ['TTS_HOME'] = os.path.join(os.getcwd(), "models")
+        data_dir = get_user_data_dir('tts')
+
+        print("Data Dir", data_dir)
+        
         self.tts = TTS()
         self.model_name = model_name
         self.model_path = os.path.join(data_dir, model_name)
@@ -30,6 +30,7 @@ class VoiceSynthesizer:
         # Initialize model components
         # self.model_type, self.lang, self.dataset, self.model = self.get_model_components(model_name)
         self._generate()
+        self.data_dir = data_dir
 
     def list_models(self):
         available_models = []
@@ -150,8 +151,7 @@ class VoiceSynthesizer:
         import sys, os
         import subprocess
         import asyncio
-        print(f"XXXXXXXXXXXXXXXXXXXXXX {model_name}")
-        print(f'Downloading model {model_name}')
+        print(f'⚓️ Downloading model {model_name}')
 
         # Path to the download.py script
         script_path = os.path.join(os.path.dirname(__file__), 'download.py')
@@ -165,7 +165,7 @@ class VoiceSynthesizer:
                 # Read a line of stdout
                 stdout_line = proc.stdout.readline()
                 if stdout_line:
-                    print(stdout_line.strip())  # Print the line from stdout
+                    print("🎉 DOWNLOAD : ", stdout_line.strip())  # Print the line from stdout
                 else:
                     break  # Exit when there are no more lines
 
@@ -219,7 +219,7 @@ class VoiceSynthesizer:
         # model_type, lang, dataset, model = model_name.split(model_sep)
         model_type, lang, dataset, model = self.get_model_components(model_name)
         model_full_name = f'{model_type}--{lang}--{dataset}--{model}'
-        return os.path.join(data_dir, model_full_name)
+        return os.path.join(self.data_dir, model_full_name)
     
     def _get_tts(self, model_name):
         model_type, lang, dataset, self.model = self.get_model_components(model_name)

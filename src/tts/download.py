@@ -6,20 +6,15 @@ import sys
 import os
 from TTS.api import TTS
 
-
-
 class TTSModelDownloader:
     def __init__(self):
+        os.environ['TTS_HOME'] = os.path.join(os.getcwd(), "models")
         self.tts = TTS()
-        os.environ.setdefault('TTS_HOME', os.path.join(os.getcwd(), "src", "tts", "models"))
-        print(os.path.join(os.getcwd(), "src", "tts", "models"))
-        print(f"Model storage path: {os.environ['TTS_HOME']}")
 
     def list_all_models(self):
         return self.tts.manager.list_models()
 
     def download_model(self, model_name):
-        print(f"Downloading model: {model_name}")
         self.tts.download_model_by_name(model_name)
 
     def download_selected_models(self, languages=None, datasets=None, models=None, patterns=None, regexps=None, types=None, dryrun=False):
@@ -28,6 +23,9 @@ class TTSModelDownloader:
         for model_name in self.list_all_models():
             model_type, lang, dataset, model = model_name.split('/')
             
+            # print(f"🔖 Selected models: {model_type}, {lang}, {dataset}, {model}")
+
+            # print(f"🔖 Selected conditions: {languages}, {datasets}, {models}, {patterns}, {regexps}, {types}")
             if (languages and lang not in languages) or \
                (datasets and dataset not in datasets) or \
                (models and model not in models) or \
@@ -40,7 +38,7 @@ class TTSModelDownloader:
             if regexps and not any(re.match(regexp, model_name) for regexp in regexps):
                 continue
             
-            print(f"Model selected: {model_name}")
+            print(f"✅ Model selected: {model_name}")
             if not dryrun:
                 self.download_model(model_name)
 
@@ -84,12 +82,10 @@ def main():
         print('No model selected. Specify selection parameters or use --all to download all models.', file=sys.stderr)
         sys.exit(1)
 
-    
-
     downloader = TTSModelDownloader()
 
     if args.list_all:
-        print('Available models:')
+        print('🔖 Available models:')
         for model in downloader.list_all_models():
             print(model)
         sys.exit(0)
