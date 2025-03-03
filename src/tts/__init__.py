@@ -56,8 +56,8 @@ class VoiceSynthesizer:
         return [self.model_sep.join(model_name.split('/')[1:]) for model_name in TTS().manager.list_models()]
     
     def list_models_language(self):
-        if self.model_languages:
-            return self.model_languages
+        # if self.model_languages:
+        #     return self.model_languages
         for model_name in self.list_models():
             # Name format: type/language/dataset/model
             # _, lang, _, _ = model_name.split(model_sep)
@@ -68,7 +68,7 @@ class VoiceSynthesizer:
             model_path = self.get_model_path(model_name)
             print(model_path)
             if not os.path.exists(model_path):
-                # print(f'model {model_name} NOT present at {model_path}')
+                print(f'model {model_name} NOT present at {model_path}')
                 continue
 
             print(f'model {model_name} downloaded at {model_path}')
@@ -80,7 +80,7 @@ class VoiceSynthesizer:
                     data = json.load(f)
                 languages |= data.keys()
 
-            # print(f'model {model_name} languages: {", ".join(languages)}')
+            print(f'model {model_name} languages: {", ".join(languages)}')
 
             self.model_languages[model_name] = list(sorted(languages))
 
@@ -88,8 +88,10 @@ class VoiceSynthesizer:
 
 
     def list_models_by_language(self):
-        if self.models_by_language:
-            return self.models_by_language
+
+        print("list_models_by_language", self.models_by_language)
+        # if self.models_by_language:
+        #     return self.models_by_language
         model_languages = self.list_models_language()
         for model_name, languages in model_languages.items():
             for language in languages:
