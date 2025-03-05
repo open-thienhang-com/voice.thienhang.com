@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+# utf-8
 
 import re
 import argparse
 import sys
 import os
 from TTS.api import TTS
+
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 class TTSModelDownloader:
     def __init__(self):
