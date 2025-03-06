@@ -12,6 +12,7 @@ from enum import Enum
 from typing import Union
 from collections import defaultdict
 
+
 class Server:
     def __init__(self):
         debug = True
@@ -150,52 +151,51 @@ class Server:
         #     # return tts.speakers
 
 
-        # @app.post('/models/{model_name}/generate')
-        # def model_generate_post(model_name: ModelName,
-        #                         text: str = Form(),
-        #                         language: Union[Languages, None] = Form(None),
-        #                         # language: Union[str, None] = Form(None),
-        #                         speaker: Union[str, None] = Form(None),
-        #                         speaker_wav: UploadFile = File(None),
-        #                         download: bool = Form(False)):
-        #     print("model_generate_post")
-
-        # #     return generate(model_name, text, language, speaker, speaker_wav, download)
+        @app.post('/models/{model_name}/generate')
+        def model_generate_post(model_name: ModelName,
+                                text: str = Form(),
+                                language: Union[Languages, None] = Form(None),
+                                # language: Union[str, None] = Form(None),
+                                speaker: Union[str, None] = Form(None),
+                                speaker_wav: UploadFile = File(None),
+                                download: bool = Form(False)):
 
 
-        # @app.get('/models/{model_name}/generate')
-        # def model_generate_get(model_name: ModelName,
-        #                        text: str,
-        #                        language: Union[Languages, None] = None,
-        #                        # language: Union[str, None] = None,
-        #                        speaker: Union[str, None] = None,
-        #                        download: bool = False):
-        #     print("model_generate_get")
-
-        #     return generate(model_name, text, language, speaker, None, download)
+            return tts.generate(model_name, text, language, speaker, speaker_wav, download)
 
 
-        # @app.post('/generate')
-        # def generate_post(model_name: ModelName = Form(),
-        #                         text: str = Form(),
-        #                         language: Union[Languages, None] = Form(None),
-        #                         # language: Union[str, None] = Form(None),
-        #                         speaker: Union[str, None] = Form(None),
-        #                         speaker_wav: UploadFile = File(None),
-        #                         download: bool = Form(False)):
-        #     print("generate_post")
+        @app.get('/models/{model_name}/generate')
+        def model_generate_get(model_name: ModelName,
+                               text: str,
+                               language: Union[Languages, None] = None,
+                               # language: Union[str, None] = None,
+                               speaker: Union[str, None] = None,
+                               download: bool = False):
 
-        # #     return generate(model_name, text, language, speaker, speaker_wav, download)
+            return tts.generate(model_name, text, language, speaker, None, download)
 
 
-        # @app.get('/generate')
-        # def generate_get(model_name: ModelName,
-        #                        text: str,
-        #                        language: Union[Languages, None] = None,
-        #                        # language: Union[str, None] = None,
-        #                        speaker: Union[str, None] = None,
-        #                        download: bool = False):
-        #     print("generate_get")
+        @app.post('/generate')
+        def generate_post(model_name: ModelName = Form(),
+                                text: str = Form(),
+                                language: Union[Languages, None] = Form(None),
+                                # language: Union[str, None] = Form(None),
+                                speaker: Union[str, None] = Form(None),
+                                speaker_wav: UploadFile = File(None),
+                                download: bool = Form(False)):
 
-        #     return generate(model_name, text, language, speaker, None, download)
+            return tts.generate(model_name, text, language, speaker, speaker_wav, download)
+
+
+        @app.get('/generate')
+        def generate_get(model_name: ModelName,
+                               text: str,
+                               language: Union[Languages, None] = None,
+                               # language: Union[str, None] = None,
+                               speaker: Union[str, None] = None,
+                               download: bool = False):
+
+            return tts.generate(model_name, text, language, speaker, None, download)
+
+        
 

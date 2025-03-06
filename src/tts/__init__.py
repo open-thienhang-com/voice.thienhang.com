@@ -5,6 +5,7 @@ from .wrapper import TTSWrapper , InvalidInputException
 from TTS.utils.manage import get_user_data_dir
 from TTS.api import TTS
 from collections import namedtuple, defaultdict
+import struct
 
 model_speakers = {}
 
@@ -29,7 +30,7 @@ class VoiceSynthesizer:
 
         # Initialize model components
         # self.model_type, self.lang, self.dataset, self.model = self.get_model_components(model_name)
-        self._generate()
+        # self.generate()
         self.data_dir = data_dir
 
     def list_models(self):
@@ -184,31 +185,36 @@ class VoiceSynthesizer:
 
         return
     
-    def _generate(self):
+    def generate(self, model_name,
+                   text: str,
+                   language,
+                   speaker,
+                   speaker_wav,
+                   download: bool):
         try:
-            print("ok")
-            # model_name = model_name.value
-            # if language:
-            #     language = language.value
+            print(".....................ok")
+            model_name = model_name.value
+            if language:
+                language = language.value
 
-            # tts = self._get_tts(model_name)
+            tts = self._get_tts(model_name)
 
-            # if speaker_wav:
-            #     speaker_wav = speaker_wav.file
+            if speaker_wav:
+                speaker_wav = speaker_wav.file
 
-            # result = tts(text=text, language=language, speaker=speaker, speaker_wav=speaker_wav)
+            result = tts(text=text, language=language, speaker=speaker, speaker_wav=speaker_wav)
 
-            # data = [int(0x7fff * sample * 0.4) for sample in result.data]
-            # wav_data = raw_audio_data_to_wav(data, result.sample_rate, int)
-            # wav_data = raw_audio_data_to_wav(result.data, result.sample_rate)
-            # wav_data = tts.get_wav(result)
+            data = [int(0x7fff * sample * 0.4) for sample in result.data]
+            wav_data = raw_audio_data_to_wav(data, result.sample_rate, int)
+            wav_data = raw_audio_data_to_wav(result.data, result.sample_rate)
+            wav_data = tts.get_wav(result)
 
-            # if download:
-            #     headers = { 'Content-Disposition': 'attachment; filename=output.wav' }
-            # else:
-            #     headers = {}
+            if download:
+                headers = { 'Content-Disposition': 'attachment; filename=output.wav' }
+            else:
+                headers = {}
 
-            # return Response(wav_data, media_type='audio/wav', headers=headers)
+            print(wav_data, media_type='audio/wav', headers=headers)
 
         except InvalidInputException as e:
             raise e
@@ -225,14 +231,67 @@ class VoiceSynthesizer:
     
     def _get_tts(self, model_name):
         model_type, lang, dataset, self.model = self.get_model_components(model_name)
+        print("model_name: ", model_name)
+        print("model_type: ", model_type)
+        print("lang: ", lang)
+        print("dataset: ", dataset)
+        
         return TTSWrapper(
             model_name=model_name,
             model_type=model_type,
             lang=lang,
             dataset=dataset,
-            model_sep=self.model_sep,
-            default_model_type=self.default_model_type
-)
+            model=self.model
+        )
     
 
 
+def raw_audio_data_to_wav(data, sample_rate, sample_type=float):
+
+    if type(data) == bytes and data.startswith("RIFF".encode()):
+        return data
+
+    if sample_type is None:
+        sample_type = type(data[0])
+
+    if sample_type == float:
+        format_tag = 3      # WAVE_FORMAT_IEEE_FLOAT=3, WAVE_FORMAT_PCM=1
+        bits_per_sample = 32
+    elif sample_type == int:
+        format_tag = 1
+        bits_per_sample = 16
+
+    bytes_per_sample = bits_per_sample // 8
+    ch = 1
+
+    sample_count = len(data)
+
+    chunk1_size = 16
+    chunk2_size = sample_count * ch * bytes_per_sample
+    chunk_size = 4 + 8 + chunk1_size + 8 + chunk2_size
+
+    header = [
+        'RIFF'.encode(),
+        struct.pack('i', chunk_size),
+        'WAVEfmt '.encode(),
+        struct.pack('i', chunk1_size),
+        struct.pack('h', format_tag),
+        struct.pack('h', ch),
+        struct.pack('i', sample_rate),
+        struct.pack('i', sample_rate * bytes_per_sample),
+        struct.pack('h', bytes_per_sample), # block align
+        struct.pack('h', bits_per_sample),
+        'data'.encode(),
+        struct.pack('i', chunk2_size),
+    ]
+
+    if type(data) == bytes:
+        data_chunk = data
+    elif type(data) == list:
+        # https://stackoverflow.com/questions/16368263/python-struct-pack-for-individual-elements-in-a-list
+        if sample_type is int:
+            data_chunk = struct.pack('h' * sample_count * ch, *data)
+        elif sample_type is float:
+            data_chunk = struct.pack('f' * sample_count * ch, *data)
+
+    return b''.join(header) + data_chunk

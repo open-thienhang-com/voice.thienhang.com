@@ -294,7 +294,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('button#generate').addEventListener('click', generate);
     document.querySelector('button#clear').addEventListener('click', clear);
     document.querySelector('input#speaker-file-selector').addEventListener('change', speakerFileSelected);
-    document.querySelector('#select-speaker').addEventListener('click', selectSpeaker);
 
     const shiftEnterGenerate = e => {
     if(e.shiftKey && e.keyCode == 13) {

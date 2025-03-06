@@ -10,11 +10,14 @@ TTSResult = namedtuple('TTSResult', 'data, sample_rate, text, language, speaker'
 
 class TTSWrapper:
 
-    def __init__(self, model_name: str = "", model_type: str = "", lang: str='en', dataset: str='ljspeech', model_sep: str='--', default_model_type: str='tts_models'):
+    def __init__(self, model_name: str = "", model_type: str = "", lang: str='en', dataset: str='ljspeech', model: str='--'):
+        self.model_name = model_name
         self.model_type = model_type
         self.lang = lang 
         self.dataset = dataset 
+        self.model = model
         self.model_name = '/'.join([self.model_type, self.lang, self.dataset, self.model])
+
         self.freevc = self.model != 'your_tts'
         self.tts = TTS(self.model_name)
 
