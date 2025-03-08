@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 
-import os, json
-from .wrapper import TTSWrapper , InvalidInputException
+import os, json, io, sys
 from TTS.utils.manage import get_user_data_dir
 from TTS.api import TTS
 from collections import namedtuple, defaultdict
 import struct
+import subprocess
+import soundfile as sf
+import tempfile
 
 model_speakers = {}
 
+class InvalidInputException(Exception):
+    pass
+
+TTSResult = namedtuple('TTSResult', 'data, sample_rate, text, language, speaker')
 
 class VoiceSynthesizer:
     def __init__(self, model_name: str ="tts_models", default_model_type: str = "tts_models", data_dir: str = ""):
@@ -94,6 +100,8 @@ class VoiceSynthesizer:
         # if self.models_by_language:
         #     return self.models_by_language
         model_languages = self.list_models_language()
+
+        print("model_languages", model_languages)
         for model_name, languages in model_languages.items():
             for language in languages:
                 self.models_by_language[language].append(model_name)
@@ -140,10 +148,12 @@ class VoiceSynthesizer:
         # model_type, lang, dataset, model = model_name.split(model_sep)
         model_type, lang, dataset, model = self.get_model_components(model_name)
         model_full_name = f'{model_type}--{lang}--{dataset}--{model}'
-        return os.path.join(data_dir, model_full_name)
+        return os.path.join(self.data_dir, model_full_name)
     
-    def get_model_components(self, model_name):
+    def get_model_components(self, model_name: str):
         model_type = self.model_type
+        print("model_name: ", model_name)
+        print(f"model_name type: {type(model_name)}, value: {model_name}")
         lang, dataset, model = model_name.split(self.model_sep, 2)
         return model_type, lang, dataset, model
     
@@ -151,9 +161,7 @@ class VoiceSynthesizer:
         return 
     
     def download_model(self, model_name, refresh=None):
-        import sys, os
-        import subprocess
-        import asyncio
+        
         print(f'⚓️ Downloading model {model_name}')
 
         # Path to the download.py script
@@ -179,10 +187,6 @@ class VoiceSynthesizer:
 
         print(f'Downloading model {model_name} finished. {os.path.dirname(__file__)}')
 
-        # Optionally call refresh() here if needed
-        # if refresh:
-        #     refresh()
-
         return
     
     def generate(self, model_name,
@@ -192,34 +196,50 @@ class VoiceSynthesizer:
                    speaker_wav,
                    download: bool):
         try:
-            print(".....................ok")
-            model_name = model_name.value
-            if language:
-                language = language.value
-
             tts = self._get_tts(model_name)
 
             if speaker_wav:
                 speaker_wav = speaker_wav.file
 
             result = tts(text=text, language=language, speaker=speaker, speaker_wav=speaker_wav)
-
-            data = [int(0x7fff * sample * 0.4) for sample in result.data]
-            wav_data = raw_audio_data_to_wav(data, result.sample_rate, int)
-            wav_data = raw_audio_data_to_wav(result.data, result.sample_rate)
+             # Convert to WAV format
             wav_data = tts.get_wav(result)
+            # Save to a temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav:
+                temp_wav.write(wav_data)
+                temp_wav_path = temp_wav.name
+
+            # Play the generated WAV file
+            if sys.platform == "win32":
+                os.system(f'start {temp_wav_path}')
+            elif sys.platform == "darwin":
+                os.system(f'afplay {temp_wav_path}')
+            else:
+                os.system(f'play {temp_wav_path}')
 
             if download:
-                headers = { 'Content-Disposition': 'attachment; filename=output.wav' }
-            else:
-                headers = {}
+                headers = {'Content-Disposition': 'attachment; filename=output.wav'}
+            
+            print(f"WAV file generated: {temp_wav_path}")
 
-            print(wav_data, media_type='audio/wav', headers=headers)
+
+            # data = [int(0x7fff * sample * 0.4) for sample in result.data]
+            # wav_data = raw_audio_data_to_wav(data, result.sample_rate, int)
+            # wav_data = raw_audio_data_to_wav(result.data, result.sample_rate)
+            # wav_data = tts.get_wav(result)
+
+            # if download:
+            #     headers = { 'Content-Disposition': 'attachment; filename=output.wav' }
+            # else:
+            #     headers = {}
+
+            # print(wav_data.__dir__)
 
         except InvalidInputException as e:
             raise e
 
         except Exception as e:
+            print(e)
             raise e
     
     def get_model_path(self, model_name):
@@ -295,3 +315,72 @@ def raw_audio_data_to_wav(data, sample_rate, sample_type=float):
             data_chunk = struct.pack('f' * sample_count * ch, *data)
 
     return b''.join(header) + data_chunk
+
+
+
+class TTSWrapper:
+
+    def __init__(self, model_name: str = "", model_type: str = "", lang: str='en', dataset: str='ljspeech', model: str='--'):
+        os.environ['TTS_HOME'] = os.path.join(os.getcwd(), "models")
+        data_dir = get_user_data_dir('tts')
+
+        
+        self.model_name = model_name
+        self.model_type = model_type
+        self.lang = lang 
+        self.dataset = dataset 
+        self.model = model
+        self.model_name = '/'.join([self.model_type, self.lang, self.dataset, self.model])
+
+        self.freevc = self.model != 'your_tts'
+        print("=========================================================")
+        print("{} {} {} {} {}".format(self.model_name, self.model_type, self.lang, self.dataset, self.model))
+        self.tts = TTS(
+            model_name=self.model_name,
+            # model_path=os.path.join(os.path.dirname(__file__), 'models'),
+            # model_type=self.model_type,
+            # lang=self.lang,
+            # dataset=self.dataset,
+            progress_bar=True,
+            # model_path=
+        )
+
+    @property
+    def speakers(self):
+        return [x.strip() for x in self.tts.speakers or []]
+
+    @property
+    def languages(self):
+        return list(set(self.tts.languages or []) | set([self.lang]))
+
+    def download(self):
+        self.tts.download_model_by_name(self.model_name)
+
+    def get_wav(self, data):
+        if type(data) is TTSResult:
+            data = data.data
+        output = io.BytesIO()
+        self.tts.synthesizer.save_wav(data, output)
+        return output.getvalue()
+
+    def __call__(self, text, language=None, speaker=None, speaker_wav=None):
+        if not text:
+            raise InvalidInputException('input text not specified')
+        if not self.tts.is_multi_speaker:
+            speaker = None
+            # speaker_wav = None
+        elif not speaker_wav and not speaker:
+            speaker = self.tts.speakers[0]
+        if not self.tts.is_multi_lingual:
+            language = None
+        elif not language:
+            raise InvalidInputException('language not specified for multi-lingual model')
+        if self.freevc and speaker_wav:
+            import librosa
+            speaker_wav, _ = librosa.load(speaker_wav, sr=16000)#, sr=self.config.audio.input_sample_rate)
+            return TTSResult(self.tts.tts_with_vc(text=text, language=language, speaker_wav=speaker_wav),
+                             self.tts.synthesizer.tts_config.audio.sample_rate, text, language or self.lang, speaker)
+        return TTSResult(self.tts.tts(text=text, language=language, speaker=speaker, speaker_wav=speaker_wav),
+                         self.tts.synthesizer.tts_config.audio.sample_rate, text, language or self.lang, speaker)
+    
+

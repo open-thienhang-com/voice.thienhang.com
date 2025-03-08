@@ -3,52 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text-to-Speech Chat</title>
+    <title>Model Generator</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-light">
     <div class="container py-5">
-        <div class="card shadow p-4 chat-container">
-            <h2 class="text-center">Text-to-Speech Chat</h2>
-            <div class="chat-box bg-white p-3 mb-3" id="chat-box" style="height: 400px; overflow-y: auto; border-radius: 10px;">
-                <!-- Chat messages will appear here -->
-            </div>
+        <div class="card shadow p-4">
+            <h2 class="text-center">Model Generator</h2>
             
-            <div class="input-group">
-                <textarea id="text" class="form-control" rows="2" placeholder="Type your message..." onkeydown="handleKeyDown(event)"></textarea>
-                <button class="btn btn-success" id="generate"><i class="fa fa-play"></i></button>
+            <div class="row mt-4">
+                <!-- Left Section: List of Models -->
+                <div class="col-md-4 bg-white p-3">
+                    <h5>Available Models</h5>
+                    <select id="model-list" class="form-select" multiple></select>
+                </div>
+                
+                <!-- Right Section: Model Generation -->
+                <div class="col-md-8 bg-secondary text-white p-3">
+                    <h5>Generate Model</h5>
+                    <div id="error" class="alert alert-danger d-none"></div>
+                    
+                    <div class="mb-3">
+                        <label for="selected-model" class="form-label"><strong>Model:</strong></label>
+                        <select id="selected-model" class="form-select"></select>
+                    </div>
+                    
+                    <button class="btn btn-success" id="generate"><i class="fa fa-play"></i> Generate</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById("generate").addEventListener("click", synthesizeText);
+        let loader, errorMessage;
 
-        function handleKeyDown(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                synthesizeText();
+        function showLoading() {
+            loader.style.display = 'inline-block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loader.style.display = 'none';
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorMessage.style.display = 'inline-block';
+            errorMessage.innerText = message;
+            loader.style.display = 'none';
+        }
+
+        const modelConfig = {};
+        let allModels = [];
+
+        async function loadModelInfo() {
+            let modelLanguages, modelSpeakers;
+            const responseLanguages = await fetch(`/models/languages`);
+            if(responseLanguages.ok) {
+                modelLanguages = await responseLanguages.json();
+            }
+            const responseSpeakers = await fetch(`/models/speakers`);
+            if(responseSpeakers.ok) {
+                modelSpeakers = await responseSpeakers.json();
+            }
+            for(const [name, languages] of Object.entries(modelLanguages)) {
+                if(!modelConfig[name]) {
+                    modelConfig[name] = { name };
+                }
+                modelConfig[name].languages = languages;
+            }
+            for(const [name, speakers] of Object.entries(modelSpeakers)) {
+                if(!modelConfig[name]) {
+                    modelConfig[name] = { name };
+                }
+                modelConfig[name].speakers = speakers;
+            }
+            console.log(modelConfig);
+        }
+
+        async function loadAllModelsList() {
+            const response = await fetch(`/models/all`);
+            if(response.ok) {
+                allModels = await response.json();
             }
         }
 
-        function synthesizeText() {
-            let textInput = document.getElementById("text").value.trim();
-            if (textInput === "") return;
-
-            let chatBox = document.getElementById("chat-box");
-            let userMessage = `<div class='text-end'><span class='badge bg-primary p-2'>${textInput}</span></div>`;
-            chatBox.innerHTML += userMessage;
-
-            document.getElementById("text").value = "";
-
-            setTimeout(() => {
-                let botMessage = `<div class='text-start'><span class='badge bg-secondary p-2'>Synthesizing...</span></div>`;
-                chatBox.innerHTML += botMessage;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500);
+        async function generate() {
+            const modelName = document.querySelector(`#selected-model`).value;
+            console.log(modelName);
+            const headers = { 'Accept': 'audio/*' };
+            try {
+                showLoading();
+                const response = await fetch(`/models/${modelName}/generate`, { method: 'GET', headers });
+                if(!response.ok) {
+                    showError(`Response ${response.status}: ${response.statusText}`);
+                    hideLoading();
+                    return;
+                }
+                hideLoading();
+            } catch(e) {
+                console.error('TTS failed:', e);
+                showError(`${e.name}: ${e.message}`);
+                hideLoading();
+                return;
+            }
         }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadModelInfo();
+            await loadAllModelsList();
+            loader = document.querySelector('#loader');
+            errorMessage = document.querySelector('#error');
+            document.querySelector('#generate').addEventListener('click', generate);
+        });
     </script>
 </body>
 </html>

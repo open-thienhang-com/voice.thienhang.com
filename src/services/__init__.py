@@ -43,7 +43,6 @@ class Server:
         
 
     def _reload(self):
-        self._tts.refresh_models()
         self.app.router.routes = self.app.router.routes[0:4]  # reset app routes, leave only swaggger rotues, e.g., /docs, /redoc etc.
         self.load_routes()
         self._openapi()
@@ -170,8 +169,8 @@ class Server:
                                language: Union[Languages, None] = None,
                                # language: Union[str, None] = None,
                                speaker: Union[str, None] = None,
-                               download: bool = False):
-
+                               download: bool = True):
+            model_name = model_name.value
             return tts.generate(model_name, text, language, speaker, None, download)
 
 

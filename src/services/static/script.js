@@ -245,10 +245,10 @@ function addExternalSpeaker(file) {
 }
 
 function downloadModelChanged() {
-    const modelName = document.querySelector(`select#model-to-download`).value;
-    const a = document.querySelector(`a#download-model`);
-    a.href = `/models/${modelName}/download`;
-    a.classList.remove('hidden');
+    // const modelName = document.querySelector(`select#model-to-download`).value;
+    // const a = document.querySelector(`a#download-model`);
+    // a.href = `/models/${modelName}/download`;
+    // a.classList.remove('hidden');
 }
 
 function modelChanged() {
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     errorMessage = document.querySelector('#error');
 
     document.querySelector('select#model').addEventListener('change', modelChanged);
-    document.querySelector('select#model-to-download').addEventListener('change', downloadModelChanged);
+    // document.querySelector('select#model-to-download').addEventListener('change', downloadModelChanged);
     document.querySelector('button#generate').addEventListener('click', generate);
     document.querySelector('button#clear').addEventListener('click', clear);
     document.querySelector('input#speaker-file-selector').addEventListener('change', speakerFileSelected);
