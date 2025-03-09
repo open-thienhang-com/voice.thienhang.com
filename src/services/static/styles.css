@@ -1,0 +1,30 @@
+#all-model-list {
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+.model-child-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.btn-download-model {
+    background-color: transparent;
+    border: none;
+}
+
+i.fa-spinner {
+    animation: spin-animation 1s infinite;
+    display: inline-block;
+}
+
+@keyframes spin-animation {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(359deg);
+    }
+}

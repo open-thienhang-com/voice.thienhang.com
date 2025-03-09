@@ -223,14 +223,32 @@ function populateModelSelector() {
 }
 
 function populateDownloadModelSelector() {
-    const select = document.querySelector(`select#model-to-download`);
+    const allModelList = document.querySelector(`div#all-model-list`);
+    const existedModels = Object.values(modelConfig || {}).map(item => item.name)
+
     for(const model of allModels) {
-    option = document.createElement('option');
-    option.value = model;
-    const p = model.split('--');
-    option.innerText = [p[0], p[1], p.slice(2).join('--')].join('/');
-    select.appendChild(option);
+        modelChild = document.createElement('div');
+        modelChild.className = 'model-child-item'
+        modelChild.value = model;
+        const p = model.split('--');
+        modelChild.innerText = [p[0], p[1], p.slice(2).join('--')].join('/');
+        downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn-download-model';
+        downloadIcon = document.createElement('i');
+        downloadIcon.id = model;
+        const isExisted = existedModels.indexOf(model) > -1
+        downloadIcon.className = isExisted ? 'fa-solid fa-check' : 'fa-solid fa-download';
+        downloadBtn.appendChild(downloadIcon);
+        downloadBtn.addEventListener('click', (model) => {
+            downloadModel(model.target.id);
+        })
+        downloadBtn.disabled = isExisted;
+        modelChild.appendChild(downloadBtn); 
+        allModelList.appendChild(modelChild);
+
     }
+    console.log(existedModels);
+    console.log(allModels)
 }
 
 function addExternalSpeaker(file) {
@@ -249,6 +267,16 @@ function downloadModelChanged() {
     // const a = document.querySelector(`a#download-model`);
     // a.href = `/models/${modelName}/download`;
     // a.classList.remove('hidden');
+}
+
+async function downloadModel(model) {
+    const downloadIcon = document.getElementById(model);
+    downloadIcon.parentElement.disabled = true;
+    downloadIcon.className = 'fa-solid fa-spinner';
+    const response = await fetch(`/models/${model}/download`);
+    if (response.ok) {
+        downloadIcon.className = 'fa-solid fa-check';
+    }
 }
 
 function modelChanged() {
