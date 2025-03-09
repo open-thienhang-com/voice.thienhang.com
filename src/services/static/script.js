@@ -96,6 +96,7 @@ async function clear() {
 }
 
 async function generate() {
+    clear();
     const modelName = document.querySelector(`select#model`).value;
     const text = document.querySelector(`textarea#text`).value;
     const language = document.querySelector(`select#language`).value;
