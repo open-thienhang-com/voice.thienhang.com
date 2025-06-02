@@ -57,6 +57,17 @@ class Server:
             description="Application of machine learning in Voice Synthesizer",
             routes=self.app.routes,
         )
+
+        _openapi_schema["components"]["securitySchemes"] = {
+            "XCustomAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization"
+            }
+        }
+
+        _openapi_schema["security"] = [{"XCustomAuth": []}]
+            
         self.app.openapi_schema = _openapi_schema
         return
 
